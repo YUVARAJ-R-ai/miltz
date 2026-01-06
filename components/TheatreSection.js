@@ -50,7 +50,7 @@ export default function TheatreSection() {
                 className="font-heading font-black text-5xl md:text-7xl text-miltz-cream uppercase mb-8 tracking-tight drop-shadow-lg leading-none"
             >
                 Coming Soon To A <br/>
-                <span className="text-outline-red">Theatre Near You</span>
+                <span className="text-outline-red">Theater Near You</span>
             </motion.h2>
             <motion.p 
                 initial={{ opacity: 0, y: 30 }}
@@ -59,7 +59,7 @@ export default function TheatreSection() {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-xl md:text-2xl text-miltz-cream/80 font-medium max-w-3xl mx-auto mb-12"
             >
-                Upgrade your concession stand experience. Miltz is the premium snack partner your audience is craving.
+                Elevate your cinema experience. Miltz is the premium snack partner your audience is craving.
             </motion.p>
         </div>
     </section>
