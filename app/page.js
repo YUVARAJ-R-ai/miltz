@@ -2,26 +2,24 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import ProductCarousel from '../components/ProductCarousel';
-import TheatreSection from '../components/TheatreSection';
+import BrandShowcase from '../components/BrandShowcase';
 import BrandStory from '../components/BrandStory';
 
-// Product Data
+// Product Data — 4 products
 const products = [
   {
     id: 1,
-    title: "Classic Cheese Balls",
-    shortTitle: "Cheese Balls",
+    title: "Puff Corn",
+    shortTitle: "Puff Corn",
     category: "Signature Snack",
-    flavor: "Ultimate Cheddar Overload",
-    accentText: "text-miltz-orange",
-    bgColor: "bg-orange-50/50",
-    iconBg: "bg-orange-100",
-    image: "/images/pop-corn-2.jpeg",
+    flavor: "Light & Crispy Goodness",
+    tagline: "The crunch that never stops.",
+    image: "/images/corn-puff.png",
     idealFor: [
       "Movie marathons with friends",
-      "Late night cravings",
+      "After-school snacking",
       "Party snack bowls",
-      "Cheesy comfort food lovers"
+      "Light cravings anytime"
     ],
     freeFrom: [
       "Artificial Preservatives",
@@ -32,42 +30,17 @@ const products = [
   },
   {
     id: 2,
-    title: "Movie Theatre Cheese Seasoning",
-    shortTitle: "Cheese Seasoning",
-    category: "Popcorn Seasoning",
-    flavor: "Classic Cinema Cheese",
-    accentText: "text-miltz-yellow",
-    bgColor: "bg-yellow-50/50",
-    iconBg: "bg-yellow-100",
-    image: "/images/cheese-flav.jpg",
-    idealFor: [
-      "Recreating the cinema experience",
-      "Upgrading plain popcorn",
-      "Sprinkling on fries or nachos",
-      "Family movie nights"
-    ],
-    freeFrom: [
-      "Artificial Colors",
-      "Added Sugar",
-      "Cholesterol",
-      "GMOs"
-    ]
-  },
-  {
-    id: 3,
-    title: "Tangy Tomato Blast Seasoning",
-    shortTitle: "Tomato Seasoning",
+    title: "Tangy Tomato Seasoning",
+    shortTitle: "Tangy Tomato",
     category: "Popcorn Seasoning",
     flavor: "Zesty Tomato Punch",
-    accentText: "text-miltz-tomato",
-    bgColor: "bg-red-50/50",
-    iconBg: "bg-red-100",
+    tagline: "Bold tang. Addictive kick.",
     image: "/images/tangytomato-flav.jpg",
     idealFor: [
       "Adding a zesty kick to snacks",
       "Lovers of tangy flavors",
       "Spicing up roasted nuts",
-      "After-school snacking"
+      "Elevating homemade popcorn"
     ],
     freeFrom: [
       "Artificial Flavors",
@@ -77,14 +50,12 @@ const products = [
     ]
   },
   {
-    id: 4,
+    id: 3,
     title: "Cheese & Onion Seasoning",
     shortTitle: "Cheese & Onion",
     category: "Popcorn Seasoning",
-    flavor: "Savory Cheese & Onion",
-    accentText: "text-miltz-green",
-    bgColor: "bg-green-50/50",
-    iconBg: "bg-green-100",
+    flavor: "Savory Cheese & Onion Blend",
+    tagline: "Rich. Savory. Irresistible.",
     image: "/images/cheeseonion-flav.jpg",
     idealFor: [
       "Sophisticated snacking",
@@ -100,26 +71,24 @@ const products = [
     ]
   },
   {
-    id: 5,
-    title: "Spicy Peri Peri Cheese Balls",
-    shortTitle: "Spicy Balls",
-    category: "Signature Snack",
-    flavor: "Peri Peri Punch",
-    accentText: "text-miltz-red",
-    bgColor: "bg-red-50/30",
-    iconBg: "bg-red-100",
-    image: "/images/flavour-mix.jpeg",
+    id: 4,
+    title: "Classic Cheese Seasoning",
+    shortTitle: "Cheese Seasoning",
+    category: "Popcorn Seasoning",
+    flavor: "Cinema-Style Cheddar",
+    tagline: "The OG cinema flavor.",
+    image: "/images/cheese-flav.jpg",
     idealFor: [
-      "Spice lovers",
-      "Adding heat to your movie night",
-      "Sharing with brave friends",
-      "Pairing with refreshing drinks"
+      "Recreating the cinema experience",
+      "Upgrading plain popcorn",
+      "Sprinkling on fries or nachos",
+      "Family movie nights"
     ],
     freeFrom: [
-      "Artificial Heat Extracts",
-      "Preservatives",
-      "MSG",
-      "Artificial Colors"
+      "Artificial Colors",
+      "Added Sugar",
+      "Cholesterol",
+      "GMOs"
     ]
   },
 ];
@@ -130,23 +99,13 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        
-        {/* Editorial Product Spotlight Section */}
-        <div id="flavours" className="bg-white">
-          <div className="py-24 px-6 md:px-12 text-center bg-miltz-cream">
-             <h2 className="font-heading font-black text-4xl md:text-5xl text-miltz-dark uppercase mb-4">
-                  Our Star <span className="text-miltz-red">Cast</span>
-              </h2>
-              <p className="text-lg text-miltz-dark/70 max-w-2xl mx-auto">
-                  Bold flavors designed to make every movie moment unforgettable.
-              </p>
-          </div>
-          
-          {/* Product Carousel */}
+
+        {/* Products Section */}
+        <div id="products">
           <ProductCarousel products={products} />
         </div>
 
-        <TheatreSection />
+        <BrandShowcase />
         <BrandStory />
       </main>
       <Footer />
