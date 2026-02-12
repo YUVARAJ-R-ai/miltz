@@ -126,6 +126,15 @@ body {
         z-index: 2;
         pointer-events: none;
     }
+
+    /* Vignette overlay for parallax depth */
+    .vignette-overlay {
+        background: radial-gradient(ellipse at center,
+                transparent 40%,
+                rgba(20, 17, 15, 0.4) 70%,
+                rgba(20, 17, 15, 0.75) 100%);
+        pointer-events: none;
+    }
 }
 
 /* ===== CUSTOM ANIMATIONS ===== */
