@@ -1,9 +1,13 @@
+'use client';
+
+import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import ProductCarousel from '../components/ProductCarousel';
 import BrandShowcase from '../components/BrandShowcase';
 import BrandStory from '../components/BrandStory';
+import OrderForm from '../components/OrderForm';
 
 // Product Data — 4 products
 const products = [
@@ -14,7 +18,13 @@ const products = [
     category: "Signature Snack",
     flavor: "Light & Crispy Goodness",
     tagline: "The crunch that never stops.",
-    image: "/images/corn-puff.png",
+    image: "/images/product-list-puff_corn.png",
+    pricing: [
+      { label: "Bulk 1kg", size: "1kg", price: 170 },
+      { label: "15g Pack", size: "15g", price: 5 },
+      { label: "30g Pack", size: "30g", price: 10 },
+      { label: "60g Pack", size: "60g", price: 60 },
+    ],
     idealFor: [
       "Movie marathons with friends",
       "After-school snacking",
@@ -35,7 +45,7 @@ const products = [
     category: "Popcorn Seasoning",
     flavor: "Zesty Tomato Punch",
     tagline: "Bold tang. Addictive kick.",
-    image: "/images/tangytomato-flav.jpg",
+    image: "/images/product-list-tangy_tomato.png",
     idealFor: [
       "Adding a zesty kick to snacks",
       "Lovers of tangy flavors",
@@ -56,7 +66,7 @@ const products = [
     category: "Popcorn Seasoning",
     flavor: "Savory Cheese & Onion Blend",
     tagline: "Rich. Savory. Irresistible.",
-    image: "/images/cheeseonion-flav.jpg",
+    image: "/images/product-list-cheese_onion.png",
     idealFor: [
       "Sophisticated snacking",
       "Pairing with cold beverages",
@@ -77,7 +87,7 @@ const products = [
     category: "Popcorn Seasoning",
     flavor: "Cinema-Style Cheddar",
     tagline: "The OG cinema flavor.",
-    image: "/images/cheese-flav.jpg",
+    image: "/images/product-list-cheese_seasoning.png",
     idealFor: [
       "Recreating the cinema experience",
       "Upgrading plain popcorn",
@@ -94,21 +104,36 @@ const products = [
 ];
 
 export default function Home() {
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [orderProduct, setOrderProduct] = useState(null);
+
+  const handleOrder = (product) => {
+    setOrderProduct(product);
+    setOrderOpen(true);
+  };
+
   return (
     <>
-      <Navbar />
+      <Navbar onOrderClick={() => { setOrderProduct(null); setOrderOpen(true); }} />
       <main>
         <Hero />
 
         {/* Products Section */}
         <div id="products">
-          <ProductCarousel products={products} />
+          <ProductCarousel products={products} onOrder={handleOrder} />
         </div>
 
         <BrandShowcase />
         <BrandStory />
       </main>
       <Footer />
+
+      {/* Order Form Modal */}
+      <OrderForm
+        isOpen={orderOpen}
+        onClose={() => setOrderOpen(false)}
+        product={orderProduct}
+      />
     </>
   );
 }

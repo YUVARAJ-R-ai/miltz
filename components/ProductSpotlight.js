@@ -1,17 +1,108 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Check, Star, Zap, Heart, ShieldCheck, Package } from 'lucide-react';
+import { Check, Star, Zap, Heart, ShieldCheck, Package, Minus, Plus } from 'lucide-react';
 
-export default function ProductSpotlight({ product, index, className = "" }) {
+function QuantitySlider({ pricing }) {
+  const [selectedSku, setSelectedSku] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+
+  const sku = pricing[selectedSku];
+  const total = sku.price * quantity;
+  const maxQty = sku.size === '1kg' ? 50 : 100;
+
+  return (
+    <div className="mb-5 p-4 rounded-xl border border-bronze/20 bg-bg-surface/60">
+      {/* SKU pills */}
+      <p className="text-[10px] font-heading font-bold text-muted uppercase tracking-wider mb-2.5">
+        Select Size
+      </p>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {pricing.map((p, i) => (
+          <button
+            key={p.label}
+            onClick={() => { setSelectedSku(i); setQuantity(1); }}
+            className={`px-3 py-1.5 rounded-full text-xs font-heading font-bold uppercase tracking-wider transition-all duration-200 ${i === selectedSku
+                ? 'bg-bronze text-bg-primary shadow-md'
+                : 'border border-bronze/25 text-muted hover:border-bronze/50 hover:text-body-text'
+              }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Unit price */}
+      <div className="flex items-baseline gap-2 mb-3">
+        <span className="text-gold font-heading font-black text-xl">₹{sku.price}</span>
+        <span className="text-muted text-xs">per {sku.size === '1kg' ? 'kg' : 'pack'}</span>
+      </div>
+
+      {/* Quantity controls */}
+      <div className="flex items-center gap-3 mb-3">
+        <button
+          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+          className="p-1.5 rounded-full border border-bronze/25 text-muted hover:text-gold hover:border-bronze transition-colors"
+          aria-label="Decrease quantity"
+        >
+          <Minus size={14} />
+        </button>
+
+        <div className="flex-1 relative">
+          <input
+            type="range"
+            min={1}
+            max={maxQty}
+            value={quantity}
+            onChange={(e) => setQuantity(parseInt(e.target.value))}
+            className="qty-slider w-full"
+            aria-label="Quantity"
+          />
+        </div>
+
+        <button
+          onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+          className="p-1.5 rounded-full border border-bronze/25 text-muted hover:text-gold hover:border-bronze transition-colors"
+          aria-label="Increase quantity"
+        >
+          <Plus size={14} />
+        </button>
+
+        <span className="text-headline font-heading font-bold text-sm min-w-[28px] text-center">
+          {quantity}
+        </span>
+      </div>
+
+      {/* Total */}
+      <div className="flex items-center justify-between pt-3 border-t border-bronze/10">
+        <span className="text-muted text-xs font-heading font-bold uppercase tracking-wider">
+          {quantity} × ₹{sku.price}
+        </span>
+        <span className="text-gold font-heading font-black text-lg">
+          = ₹{total.toLocaleString('en-IN')}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export default function ProductSpotlight({ product, index, className = "", onOrder }) {
   const isEven = index % 2 === 0;
+  const hasPricing = product.pricing && product.pricing.length > 0;
+
+  const handleShop = () => {
+    if (onOrder) {
+      onOrder(product);
+    }
+  };
 
   return (
     <section className={`py-10 md:py-24 px-0 md:px-10 bg-bg-primary overflow-hidden min-w-full flex-shrink-0 ${className}`}>
       <div className="max-w-7xl mx-auto">
 
-        {/* ===== MOBILE LAYOUT (9skin-inspired: full-width image → content below) ===== */}
+        {/* ===== MOBILE LAYOUT ===== */}
         <div className="block lg:hidden">
           {/* Full-width Product Image */}
           <motion.div
@@ -29,11 +120,8 @@ export default function ProductSpotlight({ product, index, className = "" }) {
               sizes="100vw"
               priority={index === 0}
             />
-            {/* Warm gradient overlays */}
             <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/30 to-transparent z-[2]" />
             <div className="absolute inset-0 bg-gradient-to-b from-bg-primary/20 to-transparent z-[2]" />
-
-            {/* Tagline on image */}
             <div className="absolute bottom-6 left-5 right-5 z-[3]">
               <p className="font-heading font-bold text-sm text-amber/90 uppercase tracking-wider drop-shadow-md">
                 {product.tagline}
@@ -41,27 +129,20 @@ export default function ProductSpotlight({ product, index, className = "" }) {
             </div>
           </motion.div>
 
-          {/* Content Card (overlapping image slightly) */}
+          {/* Content Card */}
           <div className="px-5 -mt-6 relative z-10">
-            {/* Category */}
             <span className="font-heading font-bold text-[11px] tracking-[0.2em] uppercase text-bronze">
               {product.category}
             </span>
-
-            {/* Title */}
             <h2 className="font-heading font-black text-3xl text-headline mt-1 mb-2 leading-tight">
               {product.title}
             </h2>
-
-            {/* Flavor */}
             <p className="text-gold font-medium text-base mb-5">
               {product.flavor}
             </p>
-
-            {/* Separator */}
             <div className="separator-bronze mb-5 w-16" />
 
-            {/* Icons Row — horizontal scroll-friendly */}
+            {/* Icons */}
             <div className="flex gap-5 mb-6">
               {[
                 { icon: Zap, label: 'Bold Flavor' },
@@ -79,7 +160,7 @@ export default function ProductSpotlight({ product, index, className = "" }) {
               ))}
             </div>
 
-            {/* Two-column info (9skin style) */}
+            {/* Two-column info */}
             <div className="grid grid-cols-2 gap-5 mb-6">
               <div>
                 <h4 className="font-heading font-bold text-xs text-headline mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
@@ -109,28 +190,34 @@ export default function ProductSpotlight({ product, index, className = "" }) {
               </div>
             </div>
 
-            {/* Order Quantity Placeholder */}
-            <div className="mb-5 p-3.5 rounded-xl border border-dashed border-bronze/20 bg-bg-surface/40">
-              <div className="flex items-center gap-2.5">
-                <Package size={16} className="text-muted" />
-                <div>
-                  <p className="text-[11px] font-heading font-bold text-muted uppercase tracking-wider">Order Quantity</p>
-                  <p className="text-[10px] text-muted/60">Coming soon</p>
+            {/* Quantity Slider OR Placeholder */}
+            {hasPricing ? (
+              <QuantitySlider pricing={product.pricing} />
+            ) : (
+              <div className="mb-5 p-3.5 rounded-xl border border-dashed border-bronze/20 bg-bg-surface/40">
+                <div className="flex items-center gap-2.5">
+                  <Package size={16} className="text-muted" />
+                  <div>
+                    <p className="text-[11px] font-heading font-bold text-muted uppercase tracking-wider">Order Quantity</p>
+                    <p className="text-[10px] text-muted/60">Coming soon</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* CTA */}
-            <button className="w-full py-3.5 rounded-full font-heading font-bold text-sm uppercase tracking-wider border border-bronze/40 text-bronze hover:bg-bronze hover:text-bg-primary transition-all duration-300 active:scale-[0.98]">
+            <button
+              onClick={handleShop}
+              className="w-full py-3.5 rounded-full font-heading font-bold text-sm uppercase tracking-wider border border-bronze/40 text-bronze hover:bg-bronze hover:text-bg-primary transition-all duration-300 active:scale-[0.98]"
+            >
               Shop {product.shortTitle || 'Now'}
             </button>
 
-            {/* Bottom separator */}
             <div className="separator-bronze mt-8" />
           </div>
         </div>
 
-        {/* ===== DESKTOP LAYOUT (editorial side-by-side) ===== */}
+        {/* ===== DESKTOP LAYOUT ===== */}
         <div className={`hidden lg:flex ${isEven ? 'flex-row' : 'flex-row-reverse'} gap-20 items-center`}>
 
           {/* Product Image */}
@@ -219,20 +306,25 @@ export default function ProductSpotlight({ product, index, className = "" }) {
               </div>
             </div>
 
-            {/* Order Quantity */}
-            <div className="mb-6 p-4 rounded-xl border border-dashed border-bronze/25 bg-bg-surface/50">
-              <div className="flex items-center gap-3">
-                <Package size={18} className="text-muted" />
-                <div>
-                  <p className="text-xs font-heading font-bold text-muted uppercase tracking-wider">Order Quantity</p>
-                  <p className="text-xs text-muted/70 mt-0.5">Coming soon</p>
+            {/* Quantity Slider OR Placeholder */}
+            {hasPricing ? (
+              <QuantitySlider pricing={product.pricing} />
+            ) : (
+              <div className="mb-6 p-4 rounded-xl border border-dashed border-bronze/25 bg-bg-surface/50">
+                <div className="flex items-center gap-3">
+                  <Package size={18} className="text-muted" />
+                  <div>
+                    <p className="text-xs font-heading font-bold text-muted uppercase tracking-wider">Order Quantity</p>
+                    <p className="text-xs text-muted/70 mt-0.5">Coming soon</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* CTA */}
             <div>
               <motion.button
+                onClick={handleShop}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="px-8 py-3.5 rounded-full font-heading font-bold text-sm uppercase tracking-wider border border-bronze/40 text-bronze hover:bg-bronze hover:text-bg-primary transition-all duration-300 shadow-bronze-glow/0 hover:shadow-bronze-glow"

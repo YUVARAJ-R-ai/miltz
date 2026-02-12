@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductSpotlight from './ProductSpotlight';
 
-export default function ProductCarousel({ products }) {
+export default function ProductCarousel({ products, onOrder }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -93,6 +93,7 @@ export default function ProductCarousel({ products }) {
               product={products[currentIndex]}
               index={currentIndex}
               className="w-full"
+              onOrder={onOrder}
             />
           </motion.div>
         </AnimatePresence>
@@ -121,8 +122,8 @@ export default function ProductCarousel({ products }) {
             key={index}
             onClick={() => goToSlide(index)}
             className={`h-1.5 md:h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                ? 'bg-bronze w-6 md:w-7'
-                : 'bg-muted/25 w-1.5 md:w-2 hover:bg-muted/40'
+              ? 'bg-bronze w-6 md:w-7'
+              : 'bg-muted/25 w-1.5 md:w-2 hover:bg-muted/40'
               }`}
             aria-label={`Go to product ${index + 1}`}
           />

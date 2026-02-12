@@ -135,6 +135,51 @@ body {
                 rgba(20, 17, 15, 0.75) 100%);
         pointer-events: none;
     }
+
+    /* Quantity range slider */
+    .qty-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        background: rgba(176, 138, 87, 0.2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .qty-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #D4A76A;
+        border: 2px solid #14110F;
+        box-shadow: 0 0 8px rgba(176, 138, 87, 0.4);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .qty-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 12px rgba(176, 138, 87, 0.6);
+    }
+
+    .qty-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #D4A76A;
+        border: 2px solid #14110F;
+        box-shadow: 0 0 8px rgba(176, 138, 87, 0.4);
+        cursor: pointer;
+    }
+
+    .qty-slider::-moz-range-track {
+        height: 4px;
+        background: rgba(176, 138, 87, 0.2);
+        border-radius: 2px;
+    }
 }
 
 /* ===== CUSTOM ANIMATIONS ===== */
@@ -184,6 +229,98 @@ body {
     animation: grain 8s steps(10) infinite;
 }
 
+/* ===== HERO ORB ANIMATIONS (CSS for perf) ===== */
+@keyframes orbBreathe1 {
+
+    0%,
+    100% {
+        opacity: 0.03;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.08;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes orbBreathe2 {
+
+    0%,
+    100% {
+        opacity: 0.02;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.06;
+        transform: scale(1.15);
+    }
+}
+
+.hero-orb-1 {
+    animation: orbBreathe1 6s ease-in-out infinite;
+}
+
+.hero-orb-2 {
+    animation: orbBreathe2 8s ease-in-out 2s infinite;
+}
+
+/* Parallax glow CSS keyframes */
+@keyframes glowCenter {
+
+    0%,
+    100% {
+        opacity: 0.15;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1.08);
+    }
+}
+
+@keyframes glowRight {
+
+    0%,
+    100% {
+        opacity: 0.08;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.18;
+        transform: scale(1.12);
+    }
+}
+
+@keyframes productShadow {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: translateX(-50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: translateX(-50%) scale(1.06);
+    }
+}
+
+.parallax-glow-center {
+    animation: glowCenter 6s ease-in-out infinite;
+}
+
+.parallax-glow-right {
+    animation: glowRight 8s ease-in-out 1s infinite;
+}
+
+.parallax-product-shadow {
+    animation: productShadow 8s ease-in-out infinite;
+}
+
 /* ===== MOBILE RESPONSIVENESS ===== */
 @media (max-width: 640px) {
     html {
@@ -198,10 +335,28 @@ body {
     h2 {
         font-size: 1.75rem !important;
     }
+
+    /* Lighter film grain on mobile */
+    .film-grain::before {
+        animation: grain 8s steps(4) infinite;
+        opacity: 0.2;
+    }
 }
 
 @media (max-width: 380px) {
     html {
         font-size: 14px;
+    }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

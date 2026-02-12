@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Menu } from 'lucide-react';
 
-export default function Navbar() {
+export default function Navbar({ onOrderClick }) {
   const [isOpen, setIsOpen] = useState(false);
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -69,12 +69,12 @@ export default function Navbar() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-bronze group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
-            <Link
-              href="#products"
+            <button
+              onClick={onOrderClick}
               className="bg-cta text-headline px-5 py-2 rounded-full font-heading font-bold text-xs uppercase tracking-wider hover:bg-cta-hover transition-all duration-300 shadow-cta-glow hover:shadow-lg"
             >
               Order Now
-            </Link>
+            </button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -142,13 +142,12 @@ export default function Navbar() {
                   transition={{ delay: 0.25 }}
                   className="mt-4"
                 >
-                  <Link
-                    href="#products"
-                    onClick={() => setIsOpen(false)}
-                    className="block text-center bg-cta text-headline px-6 py-3 rounded-full font-heading font-bold text-sm uppercase tracking-wider hover:bg-cta-hover transition-all duration-300"
+                  <button
+                    onClick={() => { setIsOpen(false); onOrderClick?.(); }}
+                    className="block w-full text-center bg-cta text-headline px-6 py-3 rounded-full font-heading font-bold text-sm uppercase tracking-wider hover:bg-cta-hover transition-all duration-300"
                   >
                     Order Now
-                  </Link>
+                  </button>
                 </motion.div>
               </nav>
             </motion.div>
