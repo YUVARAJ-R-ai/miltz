@@ -1,30 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import ProductSpotlight from './ProductSpotlight';
+
+const AUTO_SCROLL_INTERVAL = 6000; // ms between auto-scrolls
 
 export default function ProductCarousel({ products, onOrder }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(true);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [currentIndex]);
-
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % products.length);
-  };
+  }, [products.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
-  };
+  }, [products.length]);
+
+  // Auto-scroll — only runs when autoPlay is true
+  useEffect(() => {
+    if (!autoPlay) return;
+
+    const timer = setInterval(() => {
+      nextSlide();
+    }, AUTO_SCROLL_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, [autoPlay, currentIndex, nextSlide]);
 
   const goToSlide = (index) => {
     setDirection(index > currentIndex ? 1 : -1);
@@ -99,7 +106,7 @@ export default function ProductCarousel({ products, onOrder }) {
         </AnimatePresence>
       </div>
 
-      {/* Navigation Arrows — positioned for both mobile and desktop */}
+      {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
         className="absolute left-2 md:left-6 top-[35%] md:top-1/2 -translate-y-1/2 z-20 bg-bg-surface/70 backdrop-blur-sm border border-bronze/10 p-2 md:p-3 rounded-full hover:shadow-bronze-glow transition-all text-body-text hover:text-gold"
@@ -115,19 +122,45 @@ export default function ProductCarousel({ products, onOrder }) {
         <ChevronRight size={18} className="md:w-5 md:h-5" />
       </button>
 
-      {/* Dots Navigation */}
-      <div className="relative z-20 flex gap-2.5 justify-center py-6 md:py-8">
-        {products.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`h-1.5 md:h-2 rounded-full transition-all duration-300 ${index === currentIndex
-              ? 'bg-bronze w-6 md:w-7'
-              : 'bg-muted/25 w-1.5 md:w-2 hover:bg-muted/40'
-              }`}
-            aria-label={`Go to product ${index + 1}`}
-          />
-        ))}
+      {/* Bottom Controls: Dots + Auto-scroll Toggle */}
+      <div className="relative z-20 flex items-center justify-center gap-4 py-6 md:py-8">
+        {/* Dot indicators */}
+        <div className="flex gap-2.5">
+          {products.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`h-1.5 md:h-2 rounded-full transition-all duration-300 ${index === currentIndex
+                ? 'bg-bronze w-6 md:w-7'
+                : 'bg-muted/25 w-1.5 md:w-2 hover:bg-muted/40'
+                }`}
+              aria-label={`Go to product ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Auto-scroll toggle */}
+        <button
+          onClick={() => setAutoPlay(!autoPlay)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-heading font-bold uppercase tracking-wider border transition-all duration-300 ${autoPlay
+              ? 'border-bronze/30 text-bronze bg-bronze/5 hover:bg-bronze/10'
+              : 'border-muted/20 text-muted/60 hover:border-muted/40 hover:text-muted'
+            }`}
+          aria-label={autoPlay ? 'Pause auto-scroll' : 'Resume auto-scroll'}
+          title={autoPlay ? 'Pause auto-scroll' : 'Resume auto-scroll'}
+        >
+          {autoPlay ? (
+            <>
+              <Pause size={12} />
+              <span className="hidden sm:inline">Auto</span>
+            </>
+          ) : (
+            <>
+              <Play size={12} />
+              <span className="hidden sm:inline">Auto</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

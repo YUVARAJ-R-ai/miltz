@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 
@@ -17,13 +17,6 @@ const SUBJECT_DURATION = 1.6;         // product slide-down speed
 const SUBJECT_DELAY = 0.6;            // product start delay after bg
 const FG_DURATION = 1.0;              // foreground slide-down speed
 const FG_DELAY = 1.1;                 // foreground start delay after bg
-
-const PRODUCT_SIZES = {
-  sm: { w: 320, h: 450 },            // mobile
-  md: { w: 420, h: 580 },            // small tablet
-  lg: { w: 540, h: 720 },            // tablet
-  xl: { w: 620, h: 820 },            // desktop
-};
 
 const ZOOM_PULSE = [1, 1.06, 1];      // still-frame scale pulse
 const ZOOM_DURATION = 8;              // seconds per pulse cycle
@@ -44,12 +37,14 @@ const MOUSE_SENSITIVITY = { x: 18, y: 12 };
 const EASE_SLIDE = [0.22, 1, 0.36, 1];
 
 export default function Hero() {
-  const [parallaxActive, setParallaxActive] = useState(false);
-  const [revealDone, setRevealDone] = useState(false);
-  const [isMobile, setIsMobile] = useState(true); // default true until detected
+  const [phase, setPhase] = useState('initial');   // 'initial' | 'transitioning' | 'done'
+  const [isMobile, setIsMobile] = useState(true);
   const mousePosRef = useRef({ x: 0, y: 0 });
   const fgRef = useRef(null);
   const rafRef = useRef(null);
+
+  const parallaxActive = phase === 'transitioning' || phase === 'done';
+  const revealDone = phase === 'done';
 
   // Detect touch device
   useEffect(() => {
@@ -68,27 +63,25 @@ export default function Hero() {
 
   // Trigger parallax transition after delay
   useEffect(() => {
-    const timer = setTimeout(() => setParallaxActive(true), PARALLAX_DELAY);
+    const timer = setTimeout(() => {
+      setPhase('transitioning');
+    }, PARALLAX_DELAY);
 
-    const handleScroll = () => {
-      if (window.scrollY > 200) clearTimeout(timer);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   // Mark reveal complete after slowest layer finishes
   useEffect(() => {
-    if (parallaxActive) {
-      const longestTransition = (BG_DURATION + BG_DELAY) * 1000 + 400;
-      const timer = setTimeout(() => setRevealDone(true), longestTransition);
+    if (phase === 'transitioning') {
+      const longestMs = Math.max(
+        BG_DURATION + BG_DELAY,
+        SUBJECT_DURATION + SUBJECT_DELAY,
+        FG_DURATION + FG_DELAY
+      ) * 1000 + 500;
+      const timer = setTimeout(() => setPhase('done'), longestMs);
       return () => clearTimeout(timer);
     }
-  }, [parallaxActive]);
+  }, [phase]);
 
   // Mouse tracking for foreground — uses rAF for performance
   useEffect(() => {
@@ -106,7 +99,7 @@ export default function Hero() {
     const animate = () => {
       if (fgRef.current) {
         fgRef.current.style.transform =
-          `translate(${mousePosRef.current.x}px, ${mousePosRef.current.y}px)`;
+          `translate3d(${mousePosRef.current.x}px, ${mousePosRef.current.y}px, 0)`;
       }
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -128,7 +121,7 @@ export default function Hero() {
       {/* ═══════════════════════════════════════════════ */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-bg-primary" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-warm-radial from-bronze/8 via-transparent to-transparent opacity-60" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full bg-bronze/5 blur-[200px]" />
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-bg-secondary/50 to-transparent" />
         {/* Ambient orbs — CSS keyframes for perf */}
         <div className="hero-orb-1 absolute top-[20%] right-[15%] w-[300px] h-[300px] rounded-full bg-bronze/10 blur-[100px]" />
@@ -144,9 +137,10 @@ export default function Hero() {
       {/*  HERO TEXT — pushes DOWN when parallax starts   */}
       {/* ═══════════════════════════════════════════════ */}
       <motion.div
+        initial={{ opacity: 1, y: 0, scale: 1 }}
         animate={parallaxActive
-          ? { opacity: 0, y: 120, scale: 0.92, filter: 'blur(6px)' }
-          : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+          ? { opacity: 0, y: 120, scale: 0.92 }
+          : { opacity: 1, y: 0, scale: 1 }
         }
         transition={{ duration: HERO_FADEOUT_DURATION, ease: 'easeInOut' }}
         className="relative z-[5] max-w-5xl mx-auto px-5 md:px-10 text-center pt-24 pb-16"
@@ -212,24 +206,27 @@ export default function Hero() {
       </motion.div>
 
       {/* Scroll indicator — visible before parallax fires */}
-      {!parallaxActive && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 3.5 }}
-          className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-[6] flex flex-col items-center gap-1"
-        >
-          <span className="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-muted/60">
-            Scroll
-          </span>
+      <AnimatePresence>
+        {!parallaxActive && (
           <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, delay: 3.5 }}
+            className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-[6] flex flex-col items-center gap-1"
           >
-            <ChevronDown size={16} className="text-bronze/50" />
+            <span className="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-muted/60">
+              Scroll
+            </span>
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <ChevronDown size={16} className="text-bronze/50" />
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════════════════════════════════════ */}
       {/*  PARALLAX LAYERS (slide down from above)       */}
@@ -237,15 +234,19 @@ export default function Hero() {
 
       {/* LAYER 1: Background — SLOWEST */}
       <motion.div
-        initial={{ y: '-105%' }}
-        animate={parallaxActive ? { y: '0%' } : { y: '-105%' }}
-        transition={{ duration: BG_DURATION, ease: EASE_SLIDE, delay: BG_DELAY }}
+        initial={false}
+        animate={{ y: parallaxActive ? '0%' : '-105%' }}
+        transition={{
+          duration: BG_DURATION,
+          ease: EASE_SLIDE,
+          delay: parallaxActive ? BG_DELAY : 0,
+        }}
         className="absolute inset-0 z-[10]"
-        style={{ willChange: 'transform' }}
+        style={{ willChange: 'transform', transform: parallaxActive ? undefined : 'translateY(-105%)' }}
       >
         {/* Post-transition: gentle horizontal drift */}
         <motion.div
-          animate={revealDone ? { x: BG_DRIFT_X } : {}}
+          animate={revealDone ? { x: BG_DRIFT_X } : { x: 0 }}
           transition={revealDone ? { duration: BG_DRIFT_DURATION, repeat: Infinity, ease: 'easeInOut' } : {}}
           className="absolute inset-[-5%] w-[110%] h-[110%]"
         >
@@ -270,31 +271,40 @@ export default function Hero() {
       {/* GLOW ORBS — CSS keyframes for performance */}
       {!isMobile && (
         <div className="absolute inset-0 z-[15] pointer-events-none">
-          <div className="parallax-glow-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] rounded-full bg-bronze/20 blur-[120px]"
-            style={{ opacity: revealDone ? undefined : 0, transition: 'opacity 0.8s ease' }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: revealDone ? 1 : 0 }}
+            transition={{ duration: 1.2 }}
+            className="parallax-glow-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] rounded-full bg-bronze/20 blur-[120px]"
           />
-          <div className="parallax-glow-right absolute top-[20%] right-[15%] w-[300px] h-[300px] rounded-full bg-gold/15 blur-[100px]"
-            style={{ opacity: revealDone ? undefined : 0, transition: 'opacity 0.8s ease' }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: revealDone ? 1 : 0 }}
+            transition={{ duration: 1.2, delay: 0.3 }}
+            className="parallax-glow-right absolute top-[20%] right-[15%] w-[300px] h-[300px] rounded-full bg-gold/15 blur-[100px]"
           />
         </div>
       )}
 
       {/* LAYER 2: Main Subject — MEDIUM speed */}
       <motion.div
-        initial={{ y: '-115%' }}
-        animate={parallaxActive ? { y: '0%' } : { y: '-115%' }}
-        transition={{ duration: SUBJECT_DURATION, ease: EASE_SLIDE, delay: SUBJECT_DELAY }}
+        initial={false}
+        animate={{ y: parallaxActive ? '0%' : '-115%' }}
+        transition={{
+          duration: SUBJECT_DURATION,
+          ease: EASE_SLIDE,
+          delay: parallaxActive ? SUBJECT_DELAY : 0,
+        }}
         className="absolute inset-0 z-[20] flex items-center justify-center"
-        style={{ willChange: 'transform' }}
+        style={{ willChange: 'transform', transform: parallaxActive ? undefined : 'translateY(-115%)' }}
       >
-        <div className="relative w-[320px] h-[450px] sm:w-[420px] sm:h-[580px] md:w-[540px] md:h-[720px] lg:w-[620px] lg:h-[820px]"
-        >
+        <div className="relative w-[320px] h-[450px] sm:w-[420px] sm:h-[580px] md:w-[540px] md:h-[720px] lg:w-[620px] lg:h-[820px]">
           {/* Combined: zoom pulse + vertical float */}
           <motion.div
             animate={revealDone ? {
               scale: ZOOM_PULSE,
               y: FLOAT_Y,
-            } : {}}
+            } : { scale: 1, y: 0 }}
             transition={revealDone ? {
               scale: { duration: ZOOM_DURATION, repeat: Infinity, ease: 'easeInOut' },
               y: { duration: FLOAT_DURATION, repeat: Infinity, ease: 'easeInOut' },
@@ -302,9 +312,11 @@ export default function Hero() {
             className="w-full h-full relative"
           >
             {/* Warm shadow under product */}
-            <div
-              className="parallax-product-shadow absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[80%] h-[30%] rounded-full bg-bronze/25 blur-[60px]"
-              style={{ opacity: revealDone ? undefined : 0, transition: 'opacity 0.8s ease' }}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: revealDone ? 0.4 : 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[80%] h-[30%] rounded-full bg-bronze/25 blur-[60px]"
             />
             <Image
               src="/images/transparent-hero-product.png"
@@ -320,25 +332,28 @@ export default function Hero() {
 
       {/* LAYER 3: Foreground — FASTEST */}
       <motion.div
-        initial={{ y: '-135%' }}
-        animate={parallaxActive ? { y: '0%' } : { y: '-135%' }}
-        transition={{ duration: FG_DURATION, ease: EASE_SLIDE, delay: FG_DELAY }}
+        initial={false}
+        animate={{ y: parallaxActive ? '0%' : '-135%' }}
+        transition={{
+          duration: FG_DURATION,
+          ease: EASE_SLIDE,
+          delay: parallaxActive ? FG_DELAY : 0,
+        }}
         className="absolute inset-0 z-[25] pointer-events-none"
-        style={{ willChange: 'transform' }}
+        style={{ willChange: 'transform', transform: parallaxActive ? undefined : 'translateY(-135%)' }}
       >
-        {/* Inner wrapper for post-transition effects */}
+        {/* Inner wrapper: post-transition effects + mouse parallax */}
         <motion.div
           ref={fgRef}
           animate={revealDone ? {
             rotate: isMobile ? 0 : FG_ROTATE,
             scale: FG_SCALE_BREATHE,
-          } : {}}
+          } : { rotate: 0, scale: 1 }}
           transition={revealDone ? {
             rotate: { duration: FG_ROTATE_DURATION, repeat: Infinity, ease: 'easeInOut' },
             scale: { duration: FG_BREATHE_DURATION, repeat: Infinity, ease: 'easeInOut' },
           } : {}}
           className="w-full h-full relative"
-          style={{ willChange: 'transform', transition: 'transform 0.15s ease-out' }}
         >
           <Image
             src="/images/corn_puff_scattered.png"
@@ -353,14 +368,14 @@ export default function Hero() {
       {/* TEXT OVERLAY — fades in after parallax lands */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={revealDone ? { opacity: 1 } : {}}
-        transition={{ duration: 0.8, delay: 0.3 }}
+        animate={{ opacity: revealDone ? 1 : 0 }}
+        transition={{ duration: 0.8, delay: revealDone ? 0.3 : 0 }}
         className="absolute inset-0 z-[30] flex flex-col items-center justify-end pb-12 md:pb-16 lg:pb-20 pointer-events-none"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={revealDone ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.4 }}
+          animate={revealDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.7, delay: revealDone ? 0.4 : 0 }}
           className="mb-3"
         >
           <span className="inline-block font-heading font-bold text-[10px] md:text-xs uppercase tracking-[0.25em] text-bg-primary bg-gold px-4 py-1.5 rounded-full shadow-lg">
@@ -370,8 +385,8 @@ export default function Hero() {
 
         <motion.h2
           initial={{ opacity: 0, y: 25 }}
-          animate={revealDone ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.6 }}
+          animate={revealDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 25 }}
+          transition={{ duration: 0.7, delay: revealDone ? 0.6 : 0 }}
           className="font-heading font-black text-3xl md:text-5xl lg:text-6xl text-headline text-center mb-2 drop-shadow-lg"
         >
           Miltz<sup className="text-sm md:text-lg text-bronze align-super">™</sup> Corn Puff
@@ -379,8 +394,8 @@ export default function Hero() {
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
-          animate={revealDone ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.8 }}
+          animate={revealDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.7, delay: revealDone ? 0.8 : 0 }}
           className="font-heading text-sm md:text-lg text-gold/90 tracking-wider mb-6 text-center"
         >
           The crunch that never stops.
@@ -388,8 +403,8 @@ export default function Hero() {
 
         <motion.div
           initial={{ opacity: 0, y: 15 }}
-          animate={revealDone ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 1.0 }}
+          animate={revealDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+          transition={{ duration: 0.7, delay: revealDone ? 1.0 : 0 }}
           className="pointer-events-auto"
         >
           <motion.a
@@ -404,12 +419,20 @@ export default function Hero() {
       </motion.div>
 
       {/* Edge fades for parallax area */}
-      {parallaxActive && (
-        <>
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-bg-primary to-transparent z-[28] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-full h-28 bg-gradient-to-t from-bg-primary/70 to-transparent z-[28] pointer-events-none" />
-        </>
-      )}
+      <AnimatePresence>
+        {parallaxActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-[28] pointer-events-none"
+          >
+            <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-bg-primary to-transparent" />
+            <div className="absolute bottom-0 left-0 w-full h-28 bg-gradient-to-t from-bg-primary/70 to-transparent" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
