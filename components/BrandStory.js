@@ -20,8 +20,8 @@ export default function BrandStory() {
                     className="relative h-[350px] md:h-[500px] rounded-2xl overflow-hidden shadow-bronze-glow group border border-bronze/10 product-overlay"
                 >
                     <Image
-                        src="/images/corn-puff.png"
-                        alt="Miltz Brand"
+                        src="/images/journey.png"
+                        alt="Miltz Brand Journey"
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, 50vw"
